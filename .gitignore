@@ -1,0 +1,9 @@
+**/.ccls-cache/
+
+**/*.out
+
+main
+limits
+test
+test_slae
+rational
