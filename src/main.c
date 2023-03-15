@@ -23,7 +23,19 @@ int main(int argc, char * argv[])
   double * x, * diff;
   size_t i;
 
-  SLAE_create_from_stream(&slae, stdin);
+  process_args(argc, argv, &filename);
+
+  if (filename != NULL)
+  {
+    if (not SLAE_create_from_file(&slae, filename))
+      return 1;
+  }
+  else
+  {
+    wdim = rand() % 10;
+    hdim = wdim + (rand() > RAND_MAX/2 ? 1 : -1) * rand()%2;
+    SLAE_create_random(&slae, wdim, hdim, 100);
+  }
 
   x = alloca(slae.W * sizeof (double));
   diff = alloca(slae.W * sizeof (double));
@@ -31,25 +43,20 @@ int main(int argc, char * argv[])
   switch (SLAE_solve(&slae, x))
   {
     case SLAE_NO:
-      // puts("\033[1;31mNo solution exists.\033[m");
-      puts("NO");
+      puts("\033[1;31mNo solution exists.\033[m");
       break;
     case SLAE_INF:
-      // puts("\033[1;31mInfinitely many solutions exist.\033[m");
-      puts("INF");
+      puts("\033[1;31mInfinitely many solutions exist.\033[m");
       break;
     case SLAE_ONE:
-      // puts("\033[1;32mSolution:");
-      // vec_fprint(x, slae.W, stdout);
-      // printf("\033[m");
-      // fflush(stdout);
-      // vec_dot(diff, x, slae.A, slae.W);
-      // vec_subtract(diff, slae.b, slae.W);
-      // puts("Difference vector:");
-      // vec_fprint(diff, slae.W, stdout);
-      for (i = 0; i < slae.W; i++)
-        printf("%.20LF ", x[i]);
-      putchar('\n');
+      puts("\033[1;32mSolution:");
+      vec_fprint(x, slae.W, stdout);
+      printf("\033[m");
+      fflush(stdout);
+      vec_dot(diff, x, slae.A, slae.W);
+      vec_subtract(diff, slae.b, slae.W);
+      puts("Difference vector:");
+      vec_fprint(diff, slae.W, stdout);
       break;
   }
 

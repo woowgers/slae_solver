@@ -17,10 +17,10 @@ TestSuite(one_simple_solution);
 
 Test(one_simple_solution, one_dimensional0)
 {
-  const double A[] = {1},
-               b[] = {0};
-  double x[] = {};
-  const size_t w = 1, h = 1;
+  enum { w = 1, h = 1 };
+  const double A[w*h] = {1},
+               b[h] = {0};
+  double x[w] = {};
   struct SLAE slae;
   enum SLAE_STATUS status;
 
@@ -31,12 +31,12 @@ Test(one_simple_solution, one_dimensional0)
   // cr_assert(x[0] = 0);
 }
 
-Test(one_simple_solution, test1)
+Test(one_simple_solution, two_dimensional0)
 {
-  const double A[] = {1},
-               b[] = {0};
-  double x[] = {};
-  const size_t w = 1, h = 1;
+  enum { w = 1, h = 1 };
+  const double A[w*h] = {1},
+               b[h] = {0};
+  double x[w] = {};
   struct SLAE slae;
   enum SLAE_STATUS status;
 
@@ -44,5 +44,25 @@ Test(one_simple_solution, test1)
   SLAE_init(&slae, A, b);
   // SLAE_solve(&slae, x);
   SLAE_free(&slae);
-  // cr_assert(x[0] == 0);
+  // cr_assert(x[0] = 0);
+}
+
+Test(one_simple_solution, three_dimensional0)
+{
+  enum { w = 3, h = 3 };
+  const double A[w*h] = {
+    1, 0, 2,
+    3, 2, 1,
+    1, 2, 0,
+  },
+               b[h] = {1, 2, 1};
+  double x[w] = {};
+  struct SLAE slae;
+  enum SLAE_STATUS status;
+
+  SLAE_create(&slae, w, h);
+  SLAE_init(&slae, A, b);
+  SLAE_solve(&slae, x);
+  SLAE_free(&slae);
+  // cr_assert(x[0] = 0);
 }

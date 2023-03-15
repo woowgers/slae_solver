@@ -18,7 +18,7 @@ rational: src/test_rational.c
 build_tests: src/test.c
 	$(CC) -o test src/slae.c src/test.c -lcriterion
 
-test:
+test: build_tests
 	@./test
 
 clean:
