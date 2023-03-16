@@ -1,3 +1,5 @@
+![Tests](https://github.com/woowgers/slae_solver/actions/workflows/c-cpp.yml/badge.svg)
+
 # Simple SLAE solver
 ## Solver uses Gauss' method to solve the system.
 ## SLAE format
