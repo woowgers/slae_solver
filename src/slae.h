@@ -32,6 +32,7 @@ typedef unsigned int uint;
 #define max4(a, b, c, d) (max(a, b) > max(c, d) ? max(a, b) : max(c, d))
 
 #define DOUBLE_IS_ZERO(x) (fabsl(x) < DBL_MIN)
+#define DOUBLE_EQUALS(x, y) (DOUBLE_IS_ZERO(x - y))
 
 #define SLAE3_A(self, i, j) (self->A[3*i + j])
 #define SLAE3_B(self, i) (self->b[i])

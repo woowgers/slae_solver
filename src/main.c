@@ -1,5 +1,4 @@
 #include "slae.h"
-#include "rational.h"
 
 
 void process_args(int argc, char * argv[], const char ** pfilename)
@@ -36,6 +35,9 @@ int main(int argc, char * argv[])
     hdim = wdim + (rand() > RAND_MAX/2 ? 1 : -1) * rand()%2;
     SLAE_create_random(&slae, wdim, hdim, 100);
   }
+
+  puts("Got SLAE:");
+  SLAE_fprint(&slae, stdout);
 
   x = alloca(slae.W * sizeof (double));
   diff = alloca(slae.W * sizeof (double));
