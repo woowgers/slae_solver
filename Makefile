@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g3 -lm
+CFLAGS = -g3 -lm -Ldeps/lib -Ideps/include
 
 .PHONY: main test clean
 
