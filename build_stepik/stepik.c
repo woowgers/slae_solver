@@ -5,16 +5,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <err.h>
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
+#if defined(DEBUG)
 #include <assert.h>
+#endif
 #include <float.h>
-#include <alloca.h>
 #include <stdarg.h>
-#include <sys/time.h>
 
 
 #if !defined(ushort)

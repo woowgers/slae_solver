@@ -5,16 +5,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <err.h>
 #include <stdlib.h>
-#include <time.h>
 #include <math.h>
 #include <string.h>
+#if defined(DEBUG)
 #include <assert.h>
+#endif
 #include <float.h>
-#include <alloca.h>
 #include <stdarg.h>
-#include <sys/time.h>
 
 
 #if !defined(ushort)
@@ -73,8 +71,10 @@ void vec_fprint(const double * vec, ushort dim, FILE * stream);
 bool SLAE_create(struct SLAE * self, ushort w, ushort h);
 void SLAE_init(struct SLAE * self, const double * A, const double * b);
 bool SLAE_create_from_stream(struct SLAE * self, FILE * stream);
+bool SLAE_create_from_stream_height_first(struct SLAE * self, FILE * stream);
 bool SLAE_create_from_file(struct SLAE * self, const char * filename);
 void SLAE_create_random(struct SLAE * self, size_t wdim, size_t hdim, uint modulo);
 void SLAE_free(struct SLAE * self);
 void SLAE_fprint(const struct SLAE * self, FILE * stream);
 enum SLAE_STATUS SLAE_solve(struct SLAE * self, double * x);
+void SLAE_remove_row(struct SLAE * self, size_t i);

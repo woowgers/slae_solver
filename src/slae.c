@@ -206,6 +206,7 @@ static bool SLAE_row_is_zeros(const struct SLAE * self, size_t i)
   return true;
 }
 
+
 __attribute__((always_inline))
 static inline void SLAE_fprint_first_row(const struct SLAE * self, FILE * stream, ushort * width)
 {
@@ -241,17 +242,52 @@ static inline void SLAE_fprint_row(const struct SLAE * self, FILE * stream, size
   fprintf(stream, "⎟%*.2lf⎟\n", width[self->W - 1], SLAE_B(self, i_row));
 }
 
-static void SLAE_fprint_x(const struct SLAE * self, FILE * stream)
+__attribute__((always_inline))
+static inline void SLAE_fprint_x(const struct SLAE * self, FILE * stream)
 {
   size_t i;
 
-  fprintf(stream, "(x%zu; ", self->xi[0]);
+  fprintf(stream, "(x%zu", self->xi[0]);
   for (i = 1; i + 1 < self->W; i++)
-    fprintf(stream, "x%zu; ", self->xi[i]);
+    fprintf(stream, "; x%zu", self->xi[i]);
   if (self->W != 1)
     fprintf(stream, "x%zu", self->xi[i]);
   fputs(")\n", stream);
 }
+
+void SLAE_fprint(const struct SLAE * self, FILE * stream)
+{
+  size_t i, j;
+  ushort * width;
+
+  SLAE_fprint_x(self, stream);
+
+  if (unlikely(self->H == 0 or self->W == 0))
+  {
+    fprintf(stream, "(|)\n");
+    return;
+  }
+  else if (unlikely(self->H == 1))
+  {
+    fputs("(", stream);
+    for (i = 0; i + 1 < self->W; i++)
+      fprintf(stream, "%.2lf ", SLAE_A(self, 0, i));
+    fprintf(stream, "%.2lf⎟%.2lf)\n", SLAE_A(self, 0, i), SLAE_B(self, 0));
+    return;
+  }
+
+  width = alloca((self->W + 1) * sizeof (ushort));
+
+  for (i = 0; i < self->W; i++)
+    width[i] = SLAE_col_width(self, i);
+  width[i] = SLAE_b_width(self);
+
+  SLAE_fprint_first_row(self, stream, width);
+  for (i = 1; i + 1 < self->H; i++)
+    SLAE_fprint_row(self, stream, i, width);
+  SLAE_fprint_last_row(self, stream, width);
+}
+
 
 __attribute__((always_inline))
 static inline void SLAE_permute_rows(struct SLAE * self, size_t i, size_t j)
@@ -268,15 +304,21 @@ static inline void SLAE_permute_rows(struct SLAE * self, size_t i, size_t j)
   double_swap(&SLAE_B(self, i), &SLAE_B(self, j));
 }
 
-__attribute__((always_inline))
-static inline void SLAE_remove_row(struct SLAE * self, size_t i)
+void SLAE_remove_row(struct SLAE * self, size_t i)
 {
+  size_t j;
+
 #if defined(DEBUG)
   assert(i < self->H);
   assert(self->H != 0);
 #endif
 
-  SLAE_permute_rows(self, i, self->H - 1);
+  if (i + 1 != self->H)
+  {
+    for (j = 0; j < self->W; j++)
+      SLAE_A(self, i, j) = SLAE_A(self, self->H - 1, j);
+    SLAE_B(self, i) = SLAE_B(self, self->H - 1);
+  }
   self->H--;
 }
 
@@ -348,16 +390,14 @@ static enum SLAE_STATUS SLAE_gauss_forward_i(struct SLAE * self, size_t i)
     {
       fprintf(stderr, "Removing %zu row as it is zeros.\n", i);
       SLAE_remove_row(self, i);
+      fprintf(stderr, "SLAE after removing %zu row:\n", i);
+      SLAE_fprint(self, stdout);
     }
 #else
       SLAE_remove_row(self, i);
 #endif
     else if (row_is_zeros)
       return SLAE_NO;
-#if defined (DEBUG)
-    fprintf(stderr, "Row %zu is zeros (%d), but corresponding b element (%e) is not (%d).\n", i, SLAE_row_is_zeros(self, i), SLAE_B(self, i), DOUBLE_IS_ZERO(SLAE_B(self, i)));
-#endif
-    return SLAE_INF;
   }
 
   for (j = i + 1; j < self->H; j++)
@@ -367,9 +407,6 @@ static enum SLAE_STATUS SLAE_gauss_forward_i(struct SLAE * self, size_t i)
     k = SLAE_A(self, j, i) / SLAE_A(self, i, i);
     SLAE_subtract_multiplied_row(self, j, i, k);
   }
-
-  if (DOUBLE_IS_ZERO(SLAE_A(self, j, j)) and SLAE_row_is_zeros(self, j))
-    SLAE_remove_row(self, j);
 
 #if defined(DEBUG)
   fprintf(stderr, "SLAE after %zu forward gauss step:\n", i);
@@ -387,14 +424,6 @@ static enum SLAE_STATUS SLAE_gauss_forward(struct SLAE * self)
   for (i = 0; i < self->H; i++)
     if ((status = SLAE_gauss_forward_i(self, i)) != SLAE_ONE)
       return status;
-
-  if (SLAE_row_is_zeros(self, i) and DOUBLE_IS_ZERO(SLAE_B(self, i)))
-    SLAE_remove_row(self, i);
-  
-  if (self->H > self->W)
-    return SLAE_NO;
-  else if (self->W > self->H)
-    return SLAE_INF;
 
   return SLAE_ONE;
 }
@@ -444,6 +473,12 @@ static enum SLAE_STATUS SLAE_gauss_solve(struct SLAE * self, double * x)
   if ((status = SLAE_gauss_forward(self)) != SLAE_ONE)
     return status;
 
+  SLAE_remove_zero_rows(self);
+  if (self->H > self->W)
+    return SLAE_NO;
+  else if (self->W > self->H)
+    return SLAE_INF;
+
   if ((status = SLAE_gauss_backward(self)) != SLAE_ONE)
     return status;
 
@@ -471,6 +506,38 @@ bool SLAE_create_from_stream(struct SLAE * self, FILE * stream)
   size_t i, j;
 
   if (fscanf(stream, "%hu %hu", &self->W, &self->H) != 2)
+  {
+    fprintf(stderr, "Failed to read SLAE size from stream\n");
+    return false;
+  }
+
+  if (not SLAE_alloc(self, self->W, self->H))
+    return false;
+  SLAE_init_xi(self);
+
+  for (i = 0; i < self->H; i++)
+  {
+    for (j = 0; j < self->W; j++)
+      if (fscanf(stream, "%lf", &SLAE_A(self, i, j)) != 1)
+      {
+        fprintf(stderr, "Failed to read SLAE from stream.\n");
+        return false;
+      }
+    if (fscanf(stream, "%lf", &SLAE_B(self, i)) != 1)
+    {
+      fprintf(stderr, "Failed to read SLAE from stream.\n");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool SLAE_create_from_stream_height_first(struct SLAE * self, FILE * stream)
+{
+  size_t i, j;
+
+  if (fscanf(stream, "%hu %hu", &self->H, &self->W) != 2)
   {
     fprintf(stderr, "Failed to read SLAE size from stream\n");
     return false;
@@ -534,35 +601,6 @@ void SLAE_free(struct SLAE * self)
   free(self->A);
   free(self->b);
   free(self->xi);
-}
-
-void SLAE_fprint(const struct SLAE * self, FILE * stream)
-{
-  size_t i, j;
-  ushort * width;
-
-  if (unlikely(self->H == 0))
-  {
-    fprintf(stream, "() ()\n");
-    return;
-  }
-  else if (unlikely(self->H == 1))
-  {
-    fprintf(stream, "(%.2lf⎟%.2lf) (x0)\n", SLAE_A(self, 0, 0), SLAE_B(self, 0));
-    return;
-  }
-
-  width = alloca((self->W + 1) * sizeof (ushort));
-
-  for (i = 0; i < self->W; i++)
-    width[i] = SLAE_col_width(self, i);
-  width[i] = SLAE_b_width(self);
-
-  SLAE_fprint_x(self, stream);
-  SLAE_fprint_first_row(self, stream, width);
-  for (i = 1; i + 1 < self->H; i++)
-    SLAE_fprint_row(self, stream, i, width);
-  SLAE_fprint_last_row(self, stream, width);
 }
 
 enum SLAE_STATUS SLAE_solve(struct SLAE * self, double * x)

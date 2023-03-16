@@ -1,5 +1,7 @@
 #include "slae.h"
 
+#include <err.h>
+
 
 void process_args(int argc, char * argv[], const char ** pfilename)
 {

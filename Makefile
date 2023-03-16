@@ -34,3 +34,4 @@ test: build_tests
 
 clean:
 	rm -f bin/*
+	rm -f build_stepik/stepik.c
