@@ -12,5 +12,6 @@ You can either specify a system via `stdin`, or pass a file with a system as a p
 
 
 ## TODO
-* Figure out why tests are failing on stepik.org
 * Add rational fractions support
+* Add more tests
+* Add CI
