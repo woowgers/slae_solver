@@ -22,11 +22,11 @@ test_remove: src/test_remove.c
 stepik: src/slae.h src/slae.h build_stepik/stepik.def.c
 	cat src/slae.h src/slae.c build_stepik/stepik.def.c > build_stepik/stepik.c
 	sed -i 's/#include ".*//g' build_stepik/stepik.c
-	$(CC) -o build_stepik/stepik build_stepik/stepik.c
+	$(CC) -o build_stepik/stepik build_stepik/stepik.c $(CFLAGS)
 
 
 build_tests: src/test.c
-	$(CC) -o bin/test src/slae.c src/test.c -lcriterion
+	$(CC) -o bin/test src/slae.c src/test.c -lcriterion $(CFLAGS)
 
 test: build_tests
 	bin/test
