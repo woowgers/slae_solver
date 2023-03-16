@@ -1,4 +1,4 @@
-#include "slae.h"
+#include "../src/slae.h"
 
 
 int main()

@@ -1,3 +1,4 @@
 **/.ccls-cache/
 /bin/**
 !/bin/.gitkeep
+build_stepik/stepik

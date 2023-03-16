@@ -13,6 +13,7 @@
 #endif
 #include <float.h>
 #include <stdarg.h>
+#include <alloca.h>
 
 
 #if !defined(ushort)
