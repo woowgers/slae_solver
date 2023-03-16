@@ -1,4 +1,4 @@
-#include "criterion/criterion.h"
+#include <criterion/criterion.h>
 #include <sys/time.h>
 
 #include "slae.h"

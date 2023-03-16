@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: install libcriterion-dev
+      run: sudo apt install -y libcriterion-dev
     - name: make
       run: make
     - name: test
